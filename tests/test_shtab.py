@@ -334,6 +334,55 @@ def fish_candidates(completion, cmdline):
     return [line.split("\t")[0] for line in proc.splitlines() if line.strip()]
 
 
+@pytest.mark.parametrize("case", ["relative", "absolute", "prefix", "no_match", "nested"])
+def test_fish_glob_filters_paths(case, change_dir):
+    """Glob completion filters the whole path but retains directories (#261)."""
+    for name in ("a.yaml", "b.json", "config.yml", "settings.toml", "notes.txt", "a.yaml.bak",
+                 "with space.yaml"):
+        (change_dir / name).touch()
+    for name in ("subdir", "space dir", "space dir/deeper folder"):
+        (change_dir / name).mkdir()
+    (change_dir / "space dir/nested.yaml").touch()
+    (change_dir / "space dir/no.txt").touch()
+    parser = ArgumentParser(prog="pathcomplete")
+    parser.add_argument("--config").complete = shtab.glob("*.toml", "*.yml", "*.yaml", "*.json")
+    completion = complete(parser, 'fish')
+    expected = {
+        "a.yaml", "b.json", "config.yml", "settings.toml", "with space.yaml", "subdir/",
+        "space dir/"}
+    prefix = ""
+    if case == "absolute":
+        prefix = str(change_dir) + "/"
+        expected = {prefix + name for name in expected}
+    elif case == "prefix":
+        prefix, expected = "a", {"a.yaml"}
+    elif case == "no_match":
+        prefix, expected = "notes", set()
+    elif case == "nested":
+        prefix = "space\\ dir/"
+        expected = {"space dir/nested.yaml", "space dir/deeper folder/"}
+    assert set(fish_candidates(completion, f"pathcomplete --config {prefix}")) == expected
+
+
+def test_fish_glob_matches_paths_not_descriptions():
+    """Description text is preserved but cannot make a nonmatching path match."""
+    if not shutil.which('fish'):
+        pytest.skip("fish not available")
+    parser = ArgumentParser(prog="pathcomplete")
+    parser.add_argument("--config").complete = shtab.glob("*.yaml")
+    completion = complete(parser, 'fish')
+    script = completion + """
+function __fish_complete_path
+  printf '%s\\n' 'a.yaml\tYAML document\t' 'notes.txt\tlooks.yaml\t' 'subdir/\tDirectory\t'
+end
+complete -C 'pathcomplete --config '
+"""
+    output = subprocess.check_output(['fish', '-c', script], text=True)
+    assert "a.yaml\tYAML document" in output
+    assert "subdir/\tDirectory" in output
+    assert "notes.txt" not in output
+
+
 def powershell_candidates(completion, cmdline):
     """Source `completion` in PowerShell, then return the completion candidates for `cmdline`."""
     if not shutil.which('pwsh'):

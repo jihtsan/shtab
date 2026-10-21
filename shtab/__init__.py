@@ -87,10 +87,15 @@ def glob(*patterns: str) -> CompleteType:
             "fish": dedent(f"""
               function _shtab_glob_compgen_{sha(patterns)}
                 set comp (commandline -ct)
-                for pattern in {join(patterns)}
-                  __fish_complete_path "$comp" | string match -e -- "$pattern"
+                for candidate in (__fish_complete_path "$comp")
+                  set -l candidate_path (string split -m1 \\t -- "$candidate")[1]
+                  for pattern in {join(patterns)} '*/'  # recurse into subdirs
+                    if string match -q -- "$pattern" "$candidate_path"
+                      printf '%s\\n' "$candidate"
+                      break
+                    end
+                  end
                 end
-                __fish_complete_path "$comp" | string match -e "*/"  # recurse into subdirs
               end
               """),
             "powershell": dedent(rf"""
