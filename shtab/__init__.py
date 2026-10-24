@@ -12,9 +12,8 @@ from itertools import starmap
 from shlex import join, quote
 from string import Template
 from textwrap import dedent
-from typing import Any, Callable
+from typing import Any, Callable, TypeVar, Union
 from typing import Optional as Opt
-from typing import TypeVar, Union
 
 try:
     __version__ = version('shtab')

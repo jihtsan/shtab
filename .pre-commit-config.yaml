@@ -53,7 +53,6 @@ repos:
     - flake8-bugbear
     - flake8-comprehensions
     - flake8-debugger
-    - flake8-isort
     - flake8-pyproject
 - repo: https://github.com/asottile/pyupgrade
   rev: v3.22.0
