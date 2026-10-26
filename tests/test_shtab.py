@@ -815,6 +815,39 @@ def test_add_argument_to_group_typing():
     assert shtab.add_argument_to(group) is group, "should return same object"
 
 
+@pytest.mark.parametrize("metavar", ["SHELL", "<shell>"])
+@pytest.mark.parametrize("grouped", [False, True])
+def test_add_argument_to_optional_metavar(metavar, grouped, capsys):
+    parser = ArgumentParser(prog="test")
+    target = parser.add_argument_group("completion") if grouped else parser
+    assert shtab.add_argument_to(target, ["-s", "--shell"], metavar=metavar) is target
+    assert f"--shell {metavar}" in parser.format_help()
+    with pytest.raises(SystemExit) as exc:
+        parser.parse_args(["--shell", "bash"])
+    assert exc.value.code == 0
+    assert capsys.readouterr().out.rstrip() == shtab.complete(parser, "bash").rstrip()
+    with pytest.raises(SystemExit) as exc:
+        parser.parse_args(["--shell", "invalid-shell"])
+    assert exc.value.code == 2
+    assert "invalid choice" in capsys.readouterr().err
+
+
+def test_add_argument_to_positional_metavar(capsys):
+    parser = ArgumentParser(prog="test")
+    sub = parser.add_subparsers().add_parser("completion")
+    shtab.add_argument_to(sub, "shell", parent=parser, metavar="SHELL")
+    assert "[SHELL]" in sub.format_help()
+    for args in (["completion", "bash"], ["completion"]):
+        with pytest.raises(SystemExit) as exc:
+            parser.parse_args(args)
+        assert exc.value.code == 0
+        assert capsys.readouterr().out.rstrip() == shtab.complete(parser, "bash").rstrip()
+    with pytest.raises(SystemExit) as exc:
+        parser.parse_args(["completion", "invalid-shell"])
+    assert exc.value.code == 2
+    assert "invalid choice" in capsys.readouterr().err
+
+
 @fix_shell
 def test_add_argument_to_positional(shell, capsys):
     parser = ArgumentParser(prog="test")

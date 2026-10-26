@@ -218,6 +218,10 @@ for example).
 
 Add direct support to scripts for a little more configurability:
 
+For argparse, `shtab.add_argument_to(parser, metavar="SHELL")` shortens the
+shell argument's label in the help output without changing its supported
+shell choices. Omitting `metavar` keeps argparse's default choices label.
+
 === "argparse"
 
     ```{.py title="pathcomplete.py" linenums="1" hl_lines="5 7 8 10 13"}
