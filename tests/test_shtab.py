@@ -412,7 +412,7 @@ def tcsh_candidates(completion, cmdlines, cwd):
     script.write_text(completion)
     prompt = "|candidates|"
     pid, fd = pty.fork()
-    if pid == 0:   # child
+    if pid == 0:  # child
         os.chdir(cwd)
         os.environ['TERM'] = 'xterm'
         os.environ['COLUMNS'] = '999'
@@ -546,7 +546,7 @@ def bash_candidates(completion, cmdlines, cwd):
     script.write_text(completion)
     prompt = "|candidates|"
     pid, fd = pty.fork()
-    if pid == 0:   # child
+    if pid == 0:  # child
         os.chdir(cwd)
         os.environ['TERM'] = 'dumb'
         os.environ['COLUMNS'] = '999'
@@ -588,7 +588,7 @@ def bash_candidates(completion, cmdlines, cwd):
             # the typed line is echoed back, followed by whatever readline inserted
             read(lambda cmdline=cmdline, seen=seen: cmdline in output[seen:])
             candidates.append(output[seen:])
-        os.write(fd, b"\x15exit\n") # discard the line & quit
+        os.write(fd, b"\x15exit\n")  # discard the line & quit
         read(lambda: True)
     finally:
         os.close(fd)
@@ -610,8 +610,8 @@ def test_bash_dir_collision(change_dir, test_parser):
         "`-o filenames` must not apply readline filename post-processing globally"
     lines = bash_candidates(completion, ["myprog cre", "myprog create alpha sub"], change_dir)
     assert lines == [
-        "myprog create ",              # choices should take priority over dirs
-        "myprog create alpha subdir/", # dirs should still have trailing `/`
+        "myprog create ",  # choices should take priority over dirs
+        "myprog create alpha subdir/",  # dirs should still have trailing `/`
     ]
 
 
