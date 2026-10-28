@@ -1536,15 +1536,13 @@ def add_argument_to(
     preamble:
       see `complete` for details
     metavar:
-      label for the shell argument in help output; defaults to argparse's choices
+      replaces shell choices list in help output
     """
     if isinstance(option_string, str):
         option_string = [option_string]
     kwargs = {
-        "choices": SUPPORTED_SHELLS, "default": None, "help": help,
+        "choices": SUPPORTED_SHELLS, "default": None, "help": help, "metavar": metavar,
         "action": completion_action(parent, preamble)}
-    if metavar is not None:
-        kwargs["metavar"] = metavar
 
     if option_string[0][0] != "-": # subparser mode
         kwargs.update(default=SUPPORTED_SHELLS[0], nargs="?")
